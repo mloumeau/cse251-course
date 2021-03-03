@@ -8,6 +8,7 @@ Purpose: Team Activity:
 
 Instructions:
 
+- You can't use any thread or process pools
 - Try to speed up this program
     - you can use threads or processes
     - you can change the Board class
@@ -28,7 +29,7 @@ import time
 
 # Include cse 251 common Python files
 import os, sys
-sys.path.append('../../code')
+sys.path.append(r'C:\Users\matth\OneDrive\Desktop\Winter 2021\CSE251\code')
 from cse251 import *
 
 words = ['BOOKMARK', 'SURNAME', 'RETHINKING', 'HEAVY', 'IRONCLAD', 'HAPPY', 
@@ -159,15 +160,13 @@ class Board():
 def main():
     board = Board(25)
     board.place_words(words)
-    print('Board with placed words')
     board.display()
     board.fill_in_dots()
     board.display()
 
     start = time.perf_counter()
-    for word in words:
-        if not board.find_word(word):
-            print(f'Error: Could not find "{word}"')
+    with mp.Pool(4) as p:
+        p.map(board.find_word, words)
     total_time = time.perf_counter() - start
 
     board.display()

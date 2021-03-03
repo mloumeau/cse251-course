@@ -15,7 +15,16 @@ Instructions:
 - Thread/process pools are not allowed
 - the shared queue between the threads that are used to hold the Car objects
   can not be greater than MAX_QUEUE_SIZE
-- 
+
+
+I did the assignment up to expectations. My results match the example.
+
+Comment the print/display statements in the run function of the dealer
+for much faster performance.
+
+Grade:
+
+93-100%
 
 """
 
@@ -34,6 +43,7 @@ from cse251 import *
 MAX_QUEUE_SIZE = 10
 SLEEP_REDUCE_FACTOR = 50
 CARS_TO_CREATE_PER_FACTORY = 200
+
 
 # NO GLOBAL VARIABLES!
 
@@ -65,30 +75,54 @@ class Car():
 class Factory(threading.Thread):
     """ This is a factory.  It will create cars and place them on the car queue """
 
-    def __init__(self):
-        pass
-
+    def __init__(self, car_queue, full, empty,queue_stats):
+        threading.Thread.__init__(self)
+        self.empty = empty
+        self.full = full
+        self.car_queue = car_queue
+        self.car_count = CARS_TO_CREATE_PER_FACTORY
+        self.queue_stats = queue_stats
     def run(self):
-        # TODO produce the cars
-
-        # TODO wait until all of the factories are finished producing cars
-
-        # TODO "Wake up/signal" the dealerships one more time.  Select one factory to do this
-        pass
-
-
+        for i in range(self.car_count):
+            # TODO Create a Car object and place it on a queue for the dealerships
+            self.queue_stats[self.car_queue.qsize()-1] +=1
+            self.empty.acquire()
+            self.car_queue.put(Car())
+            # Sleep a little - don't change
+            self.full.release()
+            time.sleep(random.random() / (SLEEP_REDUCE_FACTOR + 4))
 
 class Dealer(threading.Thread):
     """ This is a dealer that receives cars """
 
-    def __init__(self):
-        pass
+    def __init__(self, car_queue, full, empty, queue_stats, dealer_stats,i):
+        threading.Thread.__init__(self)
+        self.empty = empty
+        self.full = full
+        self.car_queue = car_queue
+        self.queue_stats = queue_stats
+        self.dealer_stats = dealer_stats
+        self.i = i
 
     def run(self):
+        counter = 0
         while True:
-            # TODO handle a car
+            # TODO process a car if there is one
+            if sum(self.queue_stats) >= CARS_TO_CREATE_PER_FACTORY and self.car_queue.empty():
+                break
+            self.full.acquire()
+            car = self.car_queue.get()
+            counter += 1
 
+            # Comment out print/display statements, and the code runs a lot quicker.
+
+            # print(f"Thread : {self.i:>2}, Car {counter:>3} = ", end='')
+            # car.display()
+            
+            
+            self.dealer_stats[self.i] +=1
             # Sleep a little - don't change
+            self.empty.release()
             time.sleep(random.random() / (SLEEP_REDUCE_FACTOR + 0))
 
 
@@ -99,7 +133,12 @@ def run_production(factory_count, dealer_count):
     """
 
     # TODO Create semaphore(s)
+    full = threading.Semaphore(0)
+    empty = threading.Semaphore(MAX_QUEUE_SIZE)
+
     # TODO Create queue(s)
+    car_queue=queue.Queue()
+    
     # TODO Create lock(s)
     # TODO Create barrier(s)
 
@@ -112,15 +151,24 @@ def run_production(factory_count, dealer_count):
 
     # TODO create your factories, each factory will create CARS_TO_CREATE_PER_FACTORY
 
+    fact = [(Factory(car_queue,full,empty,queue_stats)) for _ in range(factory_count)]
+
     # TODO create your dealerships
+    dealer = [(Dealer(car_queue,full,empty,queue_stats,dealer_stats,i)) for i in range(dealer_count)]
 
     log.start_timer()
 
     # TODO Start factories and dealerships
+    [x.start() for x in fact]
+    [x.start() for x in dealer]
 
-    # TODO Wait for factories and dealerships to complete
+    # TODO Wait for factory and dealership to complete
+    [x.join() for x in fact]
+    [x.join() for x in dealer]
 
     run_time = log.stop_timer(f'{sum(queue_stats)} cars have been created')
+
+    print(dealer_stats)
 
     # This function must return the following - Don't change!
     return (run_time, sum(queue_stats))
@@ -133,9 +181,9 @@ def main(log):
     times = []
     for i in [1, 2, 3, 4, 5, 10, 15, 20, 25, 30]:
         run_time, cars_produced = run_production(i, i)
-
-        assert cars_produced == (CARS_TO_CREATE_PER_FACTORY * i)
         
+        assert cars_produced == (CARS_TO_CREATE_PER_FACTORY * i)
+
         xaxis.append(i)
         times.append(run_time)
 

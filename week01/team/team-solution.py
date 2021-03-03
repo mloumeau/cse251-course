@@ -14,7 +14,7 @@ import threading
 
 # Include cse 251 common Python files
 import os, sys
-sys.path.append('../../code')
+sys.path.append('C:\\Users\\matth\\OneDrive\\Desktop\\Winter 2021\\CSE251\\code')
 from cse251 import *
 
 prime_count = 0

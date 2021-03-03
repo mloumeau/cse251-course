@@ -16,6 +16,14 @@ Instructions:
 - the shared queue between the threads that are used to hold the Car objects
   can not be greater than MAX_QUEUE_SIZE
 
+This assignment was a bit tricky. After giving it an effort, I worked with Jack
+and he helped me understand semaphores a bit better. I believe I did everything
+correctly, however the outputs vary each run. I think this is due to the
+"approximate size" of the qsize() function.
+
+I believe my grade should be:
+Category 4-5
+93-100%
 """
 
 import time
@@ -63,35 +71,50 @@ class Car():
 class Factory(threading.Thread):
     """ This is a factory.  It will create cars and place them on the car queue """
 
-    def __init__(self):
+    def __init__(self, car_queue, full, empty,queue_stats):
         # TODO, you need to add arguments that will pass all of data that 1 factory needs
         # to create cars and to place them in a queue.
-        pass
-
-
+        threading.Thread.__init__(self)
+        self.empty = empty
+        self.full = full
+        self.car_queue = car_queue
+        self.car_count = CARS_TO_PRODUCE
+        self.queue_stats = queue_stats
     def run(self):
         for i in range(self.car_count):
             # TODO Create a Car object and place it on a queue for the dealerships
-
+            self.queue_stats[self.car_queue.qsize()] +=1
+            self.empty.acquire()
+            self.car_queue.put(Car())
             # Sleep a little - don't change
             time.sleep(random.random() / (SLEEP_REDUCE_FACTOR + 4))
+            self.full.release()
 
 
 
 class Dealer(threading.Thread):
     """ This is a dealer that receives cars """
 
-    def __init__(self):
+    def __init__(self, car_queue, full, empty, queue_stats):
         # TODO, you need to add arguments that pass all of data that 1 factory needs
         # to create cars and to place them in a queue
-        pass
+        threading.Thread.__init__(self)
+        self.empty = empty
+        self.full = full
+        self.car_queue = car_queue
+        self.queue_stats = queue_stats
 
     def run(self):
         while True:
             # TODO process a car if there is one
-
+            if sum(self.queue_stats) >= CARS_TO_PRODUCE and self.car_queue.empty():
+                break
+            self.full.acquire()
+            self.car_queue.get()
             # Sleep a little - don't change
             time.sleep(random.random() / (SLEEP_REDUCE_FACTOR + 0))
+            self.empty.release()
+
 
 
 
@@ -99,22 +122,32 @@ def main():
     log = Log(show_terminal=True)
 
     # TODO Create semaphore(s) ?
+    full = threading.Semaphore(0)
+    empty = threading.Semaphore(MAX_QUEUE_SIZE)
+
     # TODO Create queue(s) ?
-    # TODO Create lock(s) ?
+    car_queue=queue.Queue()
 
     # This tracks the length of the car queue during receiving cars by the dealership
     # i.e., update this list each time the dealer receives a car
     queue_stats = [0] * MAX_QUEUE_SIZE
 
     # TODO create your one factory
+    fact = Factory(car_queue,full,empty,queue_stats)
 
     # TODO create your one dealership
+    deal = Dealer(car_queue,full,empty,queue_stats)
 
     log.start_timer()
 
     # TODO Start factory and dealership
+    fact.start()
+    deal.start()
+
 
     # TODO Wait for factory and dealership to complete
+    deal.join()
+    fact.join()
 
     log.stop_timer(f'All {sum(queue_stats)} have been created')
 

@@ -22,7 +22,7 @@ import json
 
 # Include cse 251 common Python files
 import os, sys
-sys.path.append('../../code')
+sys.path.append('C:\\Users\\matth\\OneDrive\\Desktop\\Winter 2021\\CSE251\\code')
 from cse251 import *
 
 # TODO Create a class based on (threading.Thread) that will
@@ -31,7 +31,16 @@ from cse251 import *
 class Request_thread(threading.Thread):
     # TODO - Add code to make an API call and return the results
     # https://realpython.com/python-requests/
-    pass
+    def __init__(self,url):
+        threading.Thread.__init__(self)
+        self.id=deck_id
+        self.response = ''
+        self.url=url
+
+    def run(self):
+        response = requests.get(self.url)
+        self.response = response.json()
+        return
 
 class Deck:
 
@@ -43,11 +52,16 @@ class Deck:
 
     def reshuffle(self):
         # TODO - add call to reshuffle
-        pass
+        t = Request_thread("https://deckofcardsapi.com/api/deck/j7yhl84145xs/shuffle/")
+        t.start()
+        t.join()
+        return
 
     def draw_card(self):
-        # TODO add call to get a card
-        pass
+        t = Request_thread("https://deckofcardsapi.com/api/deck/j7yhl84145xs/draw/?count=1")
+        t.start()
+        t.join()
+        return t.response['cards'][0]['image']
 
     def cards_remaining(self):
         return self.remaining
@@ -66,14 +80,19 @@ if __name__ == '__main__':
     #        team_get_deck_id.py program once. You can have
     #        multiple decks if you need them
 
-    deck_id = 'ENTER ID HERE'
-
+    deck_id = 'j7yhl84145xs'
+    url = "https://deckofcardsapi.com/api/deck/j7yhl84145xs/"
     # Testing Code >>>>>
-    deck = Deck(deck_id)
-    for i in range(55):
-        card = deck.draw_endless()
-        print(i, card, flush=True)
-    print()
+
+    a = Request_thread(url)
+    a.start()
+    a.join()
+    print(a.response)
+
+    # deck = Deck(deck_id)
+    # for i in range(52):
+    #     card = deck.draw_endless()
+    #     print(i, card, flush=True)
     # <<<<<<<<<<<<<<<<<<
 
     # TODO once you have the functions above working, write a card game.

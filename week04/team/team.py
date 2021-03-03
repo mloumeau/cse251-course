@@ -22,7 +22,7 @@ import requests
 
 # Include cse 251 common Python files
 import os, sys
-sys.path.append('../../code')
+sys.path.append(r'C:\Users\matth\OneDrive\Desktop\Winter 2021\CSE251\code')
 from cse251 import *
 
 RETRIEVE_THREADS = 4        # Number of retrieve_threads
@@ -41,10 +41,18 @@ def retrieve_thread():  # TODO add arguments
 
 
 
-def file_reader(): # TODO add arguments
+def file_reader(queue,log): # TODO add arguments
     """ This thread reading the data file and places the values in the data_queue """
 
     # TODO Open the data file "data.txt" and place items into a queue
+    with open('data.txt') as fp:
+        Lines=(fp.readlines())
+        
+    for line in Lines:
+        queue.put(line)
+
+    for line in Lines:
+        print(queue.get())
 
     log.write('finished reading file')
 
@@ -57,9 +65,18 @@ def main():
     log = Log(show_terminal=True)
 
     # TODO create queue and semaphore
+    q = queue.Queue()
+    sem = threading.Semaphore()
 
     # TODO create the threads. 1 filereader() and RETRIEVE_THREADS retrieve_thread()s
     # Pass any arguments to these thread need to do their job
+
+    t =[threading.Thread(target=file_reader,args=(q,log))]
+    [t.append(threading.Thread(target=retrieve_thread)) for _ in range(RETRIEVE_THREADS)]
+
+    t[0].start()
+    t[0].join()
+        
 
     log.start_timer()
 

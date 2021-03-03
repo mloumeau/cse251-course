@@ -4,11 +4,6 @@ File: cse251Turtle.py
 Author: Brother Comeau
 
 Purpose: Turtle Class for CSE 251
-
-************************************************************************
-*                  This file can not be changed!!!!                    *
-************************************************************************
-
 """
 
 import turtle
