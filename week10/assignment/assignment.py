@@ -10,15 +10,19 @@ Instructions:
 
 - Review TODO comments
 - writer: a process that will "write"/send numbers to the reader.  
-  To keep things simple, have the writer send consecutive numbers starting at 1.
+  To keep things simple, send random values from 0 to 255 to the reader.
 - reader: a process that receive numbers sent by the writer.
 - You don't need any sleep() statements for either process.
-- You are able to use lock(s) and semaphores(s).
+- You are able to use lock(s) and semaphores(s).  When using locks, you can't
+  use the arguments "block=False" or "timeout".
 - You must use shared_memory block between the two processes.  
-  This shared memory must be at least BUFFER_SIZE in size, but
-  can be larger if you need to store other values.
-- Not allowed to use Queue(), Pipe(), or any other data structure.
-- Not allowed to use Value() or Array() from the multiprocessing package.
+  You are only allowed to use BUFFER_SIZE number of positions
+  in this shared_memory for tranfering data from the writer to
+  the reader.  However, you can use other parts of the shared_memory
+  for other purposes if you want by increasing the size of the shared_memory.
+- Not allowed to use Queue(), Pipe(), List() or any other data structure.
+- Not allowed to use Value() or Array() or any other shared data type from 
+  the multiprocessing package.
 
 Add any comments for me:
 
